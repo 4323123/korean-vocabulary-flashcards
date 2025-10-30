@@ -1,0 +1,285 @@
+﻿<html>
+<head>
+<title>韩语单词卡</title>
+<style>
+body {
+    background: #667eea;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0;
+    padding: 20px;
+    font-family: Arial;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.main {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+}
+.card {
+    background: white;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    padding: 35px 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+.word {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+.meaning {
+    font-size: 24px;
+    color: #666;
+    margin: 10px 0;
+}
+.type {
+    font-size: 16px;
+    color: #888;
+}
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+.show-btn {
+    background: #4CAF50;
+    color: white;
+}
+.know-btn {
+    background: #2196F3;
+    color: white;
+}
+.unknown-btn {
+    background: #ff9800;
+    color: white;
+}
+.progress {
+    text-align: center;
+    margin-top: 20px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-weight: bold;
+}
+.hidden {
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<div class="main">
+    <h1>韩语单词学习</h1>
+    
+    <div class="card">
+        <div class="word" id="word">사람</div>
+        <div class="meaning hidden" id="meaning">人</div>
+        <div class="type hidden" id="wordtype">名词</div>
+    </div>
+    
+    <div class="buttons">
+        <button class="btn show-btn" onclick="showMeaning()">显示意思</button>
+        <button class="btn know-btn hidden" onclick="markAsKnown()">认识</button>
+        <button class="btn unknown-btn hidden" onclick="markAsUnknown()">不认识</button>
+    </div>
+    
+    <div class="progress">
+        <span id="progress">进度: 0/35</span>
+    </div>
+</div>
+
+<script>
+// 单词数据
+var words = [
+    {k:'사람', c:'人', t:'名词', level:0, next:0},
+    {k:'학교', c:'学校', t:'名词', level:0, next:0},
+    {k:'학생', c:'学生', t:'名词', level:0, next:0},
+    {k:'선생님', c:'老师', t:'名词', level:0, next:0},
+    {k:'친구', c:'朋友', t:'名词', level:0, next:0},
+    {k:'가족', c:'家人', t:'名词', level:0, next:0},
+    {k:'아버지', c:'父亲', t:'名词', level:0, next:0},
+    {k:'어머니', c:'母亲', t:'名词', level:0, next:0},
+    {k:'시간', c:'时间', t:'名词', level:0, next:0},
+    {k:'오늘', c:'今天', t:'名词', level:0, next:0},
+    {k:'내일', c:'明天', t:'名词', level:0, next:0},
+    {k:'집', c:'家', t:'名词', level:0, next:0},
+    {k:'방', c:'房间', t:'名词', level:0, next:0},
+    {k:'음식', c:'食物', t:'名词', level:0, next:0},
+    {k:'사과', c:'苹果', t:'名词', level:0, next:0},
+    {k:'책', c:'书', t:'名词', level:0, next:0},
+    {k:'의자', c:'椅子', t:'名词', level:0, next:0},
+    {k:'가다', c:'去', t:'动词', level:0, next:0},
+    {k:'오다', c:'来', t:'动词', level:0, next:0},
+    {k:'먹다', c:'吃', t:'动词', level:0, next:0},
+    {k:'마시다', c:'喝', t:'动词', level:0, next:0},
+    {k:'보다', c:'看', t:'动词', level:0, next:0},
+    {k:'읽다', c:'读', t:'动词', level:0, next:0},
+    {k:'쓰다', c:'写', t:'动词', level:0, next:0},
+    {k:'공부하다', c:'学习', t:'动词', level:0, next:0},
+    {k:'자다', c:'睡觉', t:'动词', level:0, next:0},
+    {k:'앉다', c:'坐', t:'动词', level:0, next:0},
+    {k:'크다', c:'大', t:'形容词', level:0, next:0},
+    {k:'작다', c:'小', t:'形容词', level:0, next:0},
+    {k:'좋다', c:'好', t:'形容词', level:0, next:0},
+    {k:'나쁘다', c:'坏', t:'形容词', level:0, next:0},
+    {k:'빠르다', c:'快', t:'形容词', level:0, next:0},
+    {k:'느리다', c:'慢', t:'形容词', level:0, next:0},
+    {k:'많다', c:'多', t:'形容词', level:0, next:0},
+    {k:'적다', c:'少', t:'形容词', level:0, next:0}
+];
+
+var currentWord = 0;
+var learnedCount = 0;
+
+// 复习间隔
+var intervals = [0, 5000, 10000, 30000];
+
+// 页面加载
+window.onload = function() {
+    loadData();
+    showCurrentWord();
+};
+
+// 显示意思
+function showMeaning() {
+    document.getElementById('meaning').classList.remove('hidden');
+    document.getElementById('wordtype').classList.remove('hidden');
+    document.querySelector('.show-btn').classList.add('hidden');
+    document.querySelector('.know-btn').classList.remove('hidden');
+    document.querySelector('.unknown-btn').classList.remove('hidden');
+}
+
+// 标记为认识
+function markAsKnown() {
+    var word = words[currentWord];
+    
+    if (word.level == 0) {
+        learnedCount++;
+    }
+    
+    word.level = Math.min(word.level + 1, 3);
+    word.next = Date.now() + intervals[word.level];
+    
+    saveData();
+    nextWord();
+    updateProgress();
+}
+
+// 标记为不认识
+function markAsUnknown() {
+    var word = words[currentWord];
+    
+    word.level = Math.max(word.level - 1, 0);
+    word.next = Date.now() + intervals[word.level];
+    
+    saveData();
+    nextWord();
+    updateProgress();
+}
+
+// 下一个单词
+function nextWord() {
+    var now = Date.now();
+    
+    // 找需要复习的单词
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].level > 0 && words[i].next <= now) {
+            currentWord = i;
+            showCurrentWord();
+            return;
+        }
+    }
+    
+    // 找新单词
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].level == 0) {
+            currentWord = i;
+            showCurrentWord();
+            return;
+        }
+    }
+    
+    // 随机选一个
+    currentWord = Math.floor(Math.random() * words.length);
+    showCurrentWord();
+}
+
+// 显示当前单词
+function showCurrentWord() {
+    var word = words[currentWord];
+    
+    document.getElementById('word').textContent = word.k;
+    document.getElementById('meaning').textContent = word.c;
+    document.getElementById('wordtype').textContent = word.t;
+    
+    document.getElementById('meaning').classList.add('hidden');
+    document.getElementById('wordtype').classList.add('hidden');
+    document.querySelector('.show-btn').classList.remove('hidden');
+    document.querySelector('.know-btn').classList.add('hidden');
+    document.querySelector('.unknown-btn').classList.add('hidden');
+}
+
+// 更新进度
+function updateProgress() {
+    var due = 0;
+    var now = Date.now();
+    
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].level > 0 && words[i].next <= now) {
+            due++;
+        }
+    }
+    
+    document.getElementById('progress').textContent = 
+        '掌握: ' + learnedCount + '/' + words.length + ' | 待复习: ' + due;
+}
+
+// 保存数据
+function saveData() {
+    var data = {
+        words: words,
+        learned: learnedCount,
+        current: currentWord
+    };
+    localStorage.setItem('koreanWords', JSON.stringify(data));
+}
+
+// 加载数据
+function loadData() {
+    var saved = localStorage.getItem('koreanWords');
+    if (saved) {
+        try {
+            var data = JSON.parse(saved);
+            words = data.words;
+            learnedCount = data.learned;
+            currentWord = data.current;
+        } catch(e) {
+            // 出错就从头开始
+        }
+    }
+}
+</script>
+</body>
+</html>
